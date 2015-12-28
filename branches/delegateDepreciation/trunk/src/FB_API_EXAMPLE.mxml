@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (c) 2007 Jason Crist
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+-->
+
+<!--
+The following is an example application to get you started using
+the Facebook API in AS3.
+  
+The application can be run locally as a desktop application 
+(validation required) or on the facebook website using the JavaScript API.  
+Please post questions and comments to the Google Group
+http://groups.google.com/group/facebook-actionscript-api
+or send them to me (Jason Crist:jcrist@pbking.com)
+-->
+<mx:Application 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	layout="absolute"
+	creationComplete="init();">	
+
+	<mx:TraceTarget
+		id="myTraceTarget"
+		filters="pbking.*"
+		fieldSeparator=" | "
+		includeCategory="true"
+		includeLevel="true"
+	/>
+
+	<mx:Script>
+		<![CDATA[
+			import com.pbking.facebook.FacebookSessionUtil;
+			import com.pbking.facebook.FacebookCall;
+			import com.pbking.facebook.session.DesktopSession;
+			import com.pbking.facebook.session.JSBridgeSession;
+			import com.pbking.util.logging.PBLogger;
+			import com.pbking.util.logging.PBLogEvent;
+			import mx.controls.Alert;
+			import mx.collections.ArrayCollection;
+			import mx.logging.LogEvent;
+			import mx.logging.ILogger;
+			import mx.logging.Log;
+			import com.pbking.facebook.Facebook;
+		
+			[Bindable] private var fBook:Facebook;
+			[Bindable] private var session:DesktopSession;
+			[Bindable] private var myFriends:ArrayCollection;
+			
+			private var logger:PBLogger;
+			private var storedSession:SharedObject;
+			
+			/**
+			 * Called when the application is ready
+			 */
+			private function init():void
+			{
+				//instantiate our Flash Friendly logger and listen for facebook logs
+				logger = PBLogger.getLogger("pbking.facebook");
+				logger.addEventListener(PBLogEvent.LOG, onLog);
+				
+				//create our facebook instance with the session util
+				var fsu:FacebookSessionUtil = new FacebookSessionUtil();
+				
+				fBook = fsu.facebook;
+				fBook.addEventListener(Event.COMPLETE, onFacebookReady);
+
+				fsu.connect();
+			}
+			
+			/**
+			 * Called with the facebook connection is ready.
+			 * Makes the call to get a list of the user's albums
+			 */
+			private function onFacebookReady(event:Event):void
+			{
+				if(fBook.is_connected)
+				{
+					var call:FacebookCall = new FacebookCall("friends.get");
+					fBook.post(call);
+				}
+				else
+				{
+					Alert.show("Failed to connect to facebook: " + fBook.connectionErrorMessage);
+				}
+			}
+			
+
+			/**
+			 * util to show logging on the stage
+			 */
+			private function onLog(le:PBLogEvent):void
+			{
+				logText.text += le.message + "\n";
+			}			
+		]]>
+	</mx:Script>
+	
+	<mx:Button label="validate" click="fBook.validateDesktopSession();" />
+	
+	<mx:TextArea id="logText" right="10" left="10" top="216" bottom="10"/>
+	
+	
+</mx:Application>
